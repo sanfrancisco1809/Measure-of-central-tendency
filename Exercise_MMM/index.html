@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Math Fun: Find the Mean, Median, and Mode</title>
+    <style>
+        body, html {
+            font-family: 'Arial', sans-serif;
+            background-color: blanchedalmond;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        #scoreCounter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4F8A10;
+        }
+
+        .image-line {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .child {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: grab;
+        }
+
+        .child img {
+            max-width: 100px;
+            margin-bottom: 5px;
+        }
+
+        .height-box {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .drop-zone {
+            border: 3px dashed #666;
+            height: 250px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 10px auto;
+            text-align: center;
+            font-size: 16px;
+            background-color: #fff;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .comment {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            color: #4F8A10;
+        }
+
+        .stats-boxes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #resultMessage {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #4F8A10;
+        }
+
+        #linksContainer {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .correct {
+            color: #4F8A10;
+        }
+
+        .wrong {
+            color: #D8000C;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="scoreCounter">Tries: 0 | Correct: 0</div>
+    <div id="imageLine" class="image-line"></div>
+    <div id="statsBoxes" class="stats-boxes">
+        <div id="medianBox" class="drop-zone">
+            <p>Drop the MEDIAN height here</p>
+            <div id="medianComment" class="comment"></div>
+        </div>
+        <div id="meanBox" class="drop-zone">
+            <p>Drop the MEAN height here</p>
+            <div id="meanComment" class="comment"></div>
+        </div>
+        <div id="modeBox" class="drop-zone">
+            <p>Drop the MODE height here</p>
+            <div id="modeComment" class="comment"></div>
+        </div>
+    </div>
+    <div id="resultMessage"></div>
+    <div id="linksContainer">
+        <a href="/Mean/index.html">Mean Visualization</a>|
+        <a href="/Mean/Mode/index.html">Mode Visualization</a>
+        <a href="/Mean/Median/index.html">Median Visualization</a> 
+    </div>
+
+    <script>
+        let meanHeight, medianHeight, modeHeight;
+        let childrenHeights = [];
+        let tries = 0, correct = 0;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            generateChildren(10);
+            setTimeout(calculateStatistics, 100);
+        });
+
+        function generateChildren(numberOfChildren) {
+            const container = document.getElementById('imageLine');
+            container.innerHTML = '';
+
+            // Generate random heights and include a duplicate
+            let heights = generateRandomHeightsWithDuplicate(numberOfChildren);
+
+            heights.forEach((height, index) => {
+                childrenHeights.push(height);
+
+                const childDiv = document.createElement('div');
+                childDiv.className = 'child';
+                childDiv.draggable = true;
+                childDiv.id = `child-${index}`;
+                childDiv.innerHTML = `<img src="Child_image${index % 10}.png" alt="Child${index}" draggable="false">
+                                    <div class="height-box">${height} cm</div>`;
+                childDiv.setAttribute('data-height', height);
+
+                container.appendChild(childDiv);
+            });
+
+            addEventListeners();
+        }
+
+        function generateRandomHeightsWithDuplicate(totalNumbers, min = 100, max = 150) {
+            if (totalNumbers < 2) throw new Error("Total numbers must be at least 2 to include a duplicate.");
+
+            let uniqueNumbers = new Set();
+            while (uniqueNumbers.size < totalNumbers - 1) {
+                let randomNum = Math.floor(Math.random() * (max - min) + min);
+                uniqueNumbers.add(randomNum);
+            }
+
+            let resultArray = Array.from(uniqueNumbers);
+            let duplicateNumber = resultArray[Math.floor(Math.random() * resultArray.length)];
+            resultArray.push(duplicateNumber);
+
+            // Include mean as an option
+            const meanValue = Math.round(resultArray.reduce((acc, num) => acc + num, 0) / resultArray.length);
+            resultArray.push(meanValue);
+
+            // Shuffle array
+            for (let i = resultArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [resultArray[i], resultArray[j]] = [resultArray[j], resultArray[i]];
+            }
+
+            return resultArray;
+        }
+
+        function addEventListeners() {
+            const draggableItems = document.querySelectorAll('.child');
+            draggableItems.forEach(item => item.addEventListener('dragstart', dragStart));
+
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', dragOver);
+                zone.addEventListener('drop', drop);
+            });
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData('text', event.target.id);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const droppedItemId = event.dataTransfer.getData('text');
+            const droppedItem = document.getElementById(droppedItemId);
+            const cloneItem = droppedItem.cloneNode(true);
+
+            cloneItem.style.margin = "auto";
+            const dropZone = event.target.closest('.drop-zone');
+            dropZone.innerHTML = '';
+            dropZone.appendChild(cloneItem);
+
+            const childHeight = parseInt(droppedItem.getAttribute('data-height'));
+            validateDrop(childHeight, dropZone.id);
+        }
+
+        function validateDrop(height, zoneId) {
+            let isCorrect = false;
+            let message = "";
+
+            switch (zoneId) {
+                case 'medianBox':
+                    isCorrect = height === medianHeight;
+                    message = isCorrect ? "Correct! This is the median." : "Try again!";
+                    break;
+                case 'meanBox':
+                    isCorrect = Math.round(height) === Math.round(meanHeight);
+                    message = isCorrect ? "Correct! This is the mean." : "Try again!";
+                    break;
+                case 'modeBox':
+                    isCorrect = modeHeight.includes(height);
+                    message = isCorrect ? "Correct! This is the mode." : "Try again!";
+                    break;
+            }
+
+            updateComment(zoneId, message);
+            displayResultMessage(isCorrect);
+            updateScore(isCorrect);
+        }
+
+        function updateComment(zoneId, message) {
+            let commentId = "";
+            switch (zoneId) {
+                case 'medianBox':
+                    commentId = "medianComment";
+                    break;
+                case 'meanBox':
+                    commentId = "meanComment";
+                    break;
+                case 'modeBox':
+                    commentId = "modeComment";
+                    break;
+            }
+
+            const commentElement = document.getElementById(commentId);
+            if (commentElement) {
+                commentElement.textContent = message;
+            }
+        }
+
+        function displayResultMessage(isCorrect) {
+            const messageElement = document.getElementById('resultMessage');
+            messageElement.textContent = isCorrect ? "Great job!" : "Try again!";
+            messageElement.className = isCorrect ? 'correct' : 'wrong';
+        }
+
+        function updateScore(isCorrect) {
+            tries++;
+            if (isCorrect) correct++;
+            const scoreElement = document.getElementById('scoreCounter');
+            scoreElement.textContent = `Tries: ${tries} | Correct: ${correct}`;
+        }
+
+        function calculateStatistics() {
+            meanHeight = calculateMean(childrenHeights);
+            medianHeight = calculateMedian(childrenHeights);
+            modeHeight = calculateMode(childrenHeights);
+        }
+
+        function calculateMean(numbers) {
+            const sum = numbers.reduce((sum, current) => sum + current, 0);
+            return Math.round(sum / numbers.length);
+        }
+
+        function calculateMedian(numbers) {
+            numbers.sort((a, b) => a - b);
+            const middle = Math.floor(numbers.length / 2);
+            if (numbers.length % 2 === 0) {
+                return Math.round((numbers[middle - 1] + numbers[middle]) / 2);
+            } else {
+                return numbers[middle];
+            }
+        }
+
+        function calculateMode(numbers) {
+            const frequency = {};
+            numbers.forEach(num => frequency[num] = (frequency[num] || 0) + 1);
+
+            const maxFreq = Math.max(...Object.values(frequency));
+            return Object.keys(frequency). filter(num => frequency[num] === maxFreq).map(Number);
+        }
+
+    </script>
+</body>
+</html>

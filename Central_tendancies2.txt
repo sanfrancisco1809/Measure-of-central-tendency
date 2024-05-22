@@ -1,0 +1,17 @@
+The mean (average) of a data set is found by adding all numbers in the data set and then dividing by the number of values in the set. The median is the middle value when a data set is ordered from least to greatest. The mode is the number that occurs most often in a data set.
+
+Arithmetic mean of a bunch of numbers is the number a that satisfies
+x₁ + x₂ + x₃ + .... = a + a + a + ... + a
+
+Geometric mean is the number b that satisfies
+x₁ * x₂ * x₃ * ... = b * b * b * ... * b
+
+Harmonic mean, which is the number h that satisfies
+
+1/x₁ + 1/x₂ + 1/x₃ + ... = 1/h + 1/h + ... + 1/h.
+The mean is used to summarize a data set. It is a measure of the center of a data set. 
+
+Calculating the mean
+Follow these steps:
+Step 1: Add up all of the data points 
+Step 2: Divide the total by the number of data points in the data set 

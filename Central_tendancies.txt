@@ -1,0 +1,30 @@
+Teaching central tendencies to children can be fun and engaging by using simple language and familiar examples. Central tendencies are ways to find the "middle" or the most typical value in a set of numbers. There are three main types: mean, median, and mode. Here’s how you can explain each one:
+
+1. Mean (Average)
+Explanation: The mean is what most people think of as the average. To find the mean, you add up all the numbers and then divide by how many numbers there are.
+
+Example: Imagine you have 5 apples, and they weigh 1 lb, 2 lb, 3 lb, 4 lb, and 5 lb. To find the average weight:
+
+First, add up all the weights: 
+1+2+3+4+5=15
+1+2+3+4+5=15 lbs.
+Then, divide by the number of apples: 
+15÷5=3
+15÷5=3 lbs.
+So, the average weight of the apples is 3 lbs.
+2. Median
+Explanation: The median is the middle number in a list of numbers. To find the median, you arrange the numbers in order from smallest to largest. If there is an odd number of results, the median is the middle number. If there is an even number, you take the average of the two middle numbers.
+
+Example: If you have five numbers: 2, 9, 4, 7, and 5.
+Put them in order: 2, 4, 5, 7, 9.
+The middle number is 5, so the median is 5.
+If there were six numbers: 2, 9, 4, 7, 5, and 8.
+
+Put them in order: 2, 4, 5, 7, 8, 9.
+The middle numbers are 5 and 7. Their average is 
+(5+7)÷2=6
+(5+7)÷2=6.
+So, the median is 6.
+3. Mode
+Explanation: The mode is the number that appears most often in a list.
+

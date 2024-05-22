@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics Visualization: Mean Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            text-align: center;
+            background-color: blanchedalmond;
+        }
+
+        .highlight,
+        .formula,
+        .fraction,
+        .numerator,
+        .denominator,
+        #animationContainer,
+        #calculationContainer,
+        #numberRange,
+        #formulaContainer {
+            font-size: 24px;
+            font-style: bold;
+        }
+
+        .highlight {
+            background-color: yellow;
+        }
+
+        .formula {
+            margin-top: 20px;
+        }
+
+        .fraction {
+            margin-top: 20px;
+        }
+
+        #numberRange {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #calculationContainer {
+            margin-top: 20px;
+        }
+
+        #animationContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button {
+            font-size: 20px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .fraction-display {
+            margin-top: 40px;
+        }
+
+        .item-container {
+            display: flex;
+            flex-direction: row;
+            align-items: top;
+            justify-content: center;
+            margin: 5px;
+        }
+
+        .item-container img {
+            margin-bottom: 5px;
+            align-items: baseline;
+            width: 50px;
+            height: 150px;
+        }
+
+        #meanVideo,
+        #meanVideo2 {
+            position: absolute;
+            left: -50px;
+            top: 60%;
+            width: 400px;
+            transform: translateY(-10%);
+        }
+
+        #pauseImage {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+        }
+
+        #pauseMessage {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #DBA979;
+            padding: 20px;
+            border: 2px solid black;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+        Chatbot.init({
+            chatflowid: "fb607404-f68a-448e-973f-b43201e09c56",
+            apiHost: "http://localhost:3000",
+            theme: {
+                button: {
+                    backgroundColor: "#DBA979",
+                    chatWindow: {
+                        height: 700,
+                        width: 400,
+                        userMessage: {
+                            backgroundColor: "#DBA979",
+                        },
+                        textInput: {
+                            sendButtonColor: "#DBA979",
+                        }
+                    }
+                }
+            }
+        })
+    </script>
+
+    <div id="numberRange"></div>
+    <div id="formulaContainer" class="hidden"></div>
+    <div id="animationContainer"></div>
+    <div id="calculationContainer" class="hidden"></div>
+    <video id="meanVideo" src="Mean_Video1.mp4"></video>
+    <video id="meanVideo2" src="Mean_Video2.mp4" hidden></video>
+    <button id="startButton">Start Mean Animation</button>
+    <button id="continueButton" class="hidden">Continue with New Dataset</button>
+    <div id="linksContainer" class="hidden">
+        <a href="/Mean/Median/index.html">Median Visualization</a>
+        <a href="/Mean/Mode/index.html">Mode Visualization</a>
+        <a href="/Mean/Exercise_MMM/index.html">Mean-Median-Mode Exercise</a>
+    </div>
+    <img id="pauseImage" src="hand.png" alt="Pause">
+    <div id="pauseMessage">
+        <p>Type out your question in the chat window or click on the mic to ask your question.</p>
+        <button id="resumeButton">Resume</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('meanVideo');
+        const video2 = document.getElementById('meanVideo2');
+        const pauseImage = document.getElementById('pauseImage');
+        const pauseMessage = document.getElementById('pauseMessage');
+        const resumeButton = document.getElementById('resumeButton');
+        const startButton = document.getElementById('startButton');
+        const continueButton = document.getElementById('continueButton');
+        const linksContainer = document.getElementById('linksContainer');
+        let timers = [];
+        let pausedTimers = [];
+        let remainingTimes = [];
+
+        function pauseMedia() {
+            video.pause();
+            video2.pause();
+            timers.forEach((timer, index) => {
+                clearTimeout(timer.id);
+                pausedTimers.push(timer);
+                remainingTimes.push(timer.delay - (Date.now() - timer.start));
+            });
+            timers = [];
+            pauseMessage.style.display = 'block';
+        }
+
+        function resumeMedia() {
+            if (video2.style.display === 'block') {
+                video2.play();
+            } else {
+                video.play();
+            }
+            pausedTimers.forEach((timer, index) => {
+                const id = setTimeout(timer.callback, remainingTimes[index]);
+                timers.push({ id, callback: timer.callback, delay: remainingTimes[index], start: Date.now() });
+            });
+            pausedTimers = [];
+            remainingTimes = [];
+            pauseMessage.style.display = 'none';
+        }
+
+        function setCustomTimeout(callback, delay) {
+            const id = setTimeout(callback, delay);
+            timers.push({ id, callback, delay, start: Date.now() });
+        }
+
+        function initializeTimers() {
+            setCustomTimeout(() => {
+                continueButton.classList.remove('hidden');
+            }, 75000);
+            setCustomTimeout(() => {
+                linksContainer.classList.remove('hidden');
+            }, 150000);
+        }
+
+        startButton.addEventListener('click', () => {
+            startButton.classList.add('hidden');
+            const dataSet = [2, 5, 13, 22, 47, 79];
+            video.style.display = 'block';
+            video2.style.display = 'none';
+            video.currentTime = 0;
+            video.play();
+            initializeTimers();
+            animateMeanCalculation(dataSet);
+        });
+
+        continueButton.addEventListener('click', () => {
+            continueButton.classList.add('hidden');
+            numberRange.innerHTML = '';
+            const newDataSet = [2.5, 5.5, 14.2, 24.3, 45, 80.4];
+            numberRange.classList.remove('hidden');
+            animateMeanCalculation(newDataSet);
+            video2.currentTime = 0;
+            video.style.display = 'none';
+            video2.style.display = 'block';
+            video2.play();
+            initializeTimers();
+        });
+
+        function animateMeanCalculation(dataSet) {
+            const numberRange = document.getElementById('numberRange');
+            const formulaContainer = document.getElementById('formulaContainer');
+            const animationContainer = document.getElementById('animationContainer');
+            const calculationContainer = document.getElementById('calculationContainer');
+
+            const centerX = (window.innerWidth - numberRange.offsetWidth) / 2;
+            const centerY = (window.innerHeight - numberRange.offsetHeight) / 2;
+
+            numberRange.innerHTML = '';
+            formulaContainer.innerHTML = '';
+            animationContainer.innerHTML = '';
+            calculationContainer.innerHTML = '';
+            calculationContainer.classList.add('hidden');
+
+            setCustomTimeout(() => {
+                numberRange.textContent = 'Dataset: ' + dataSet.join(', ');
+                numberRange.animate([
+                    { transform: `translate(0, 0)` },
+                    { transform: `translate(${centerX - 100}px, ${0}px)` },
+                    { transform: `translate(${centerX - 100}px, ${300}px)` }
+                ], {
+                    fill: 'forwards',
+                    easing: 'ease-out'
+                });
+            }, 10000);
+
+            numberRange.innerHTML = '';
+            formulaContainer.innerHTML = '';
+            animationContainer.innerHTML = '';
+            calculationContainer.innerHTML = '';
+            calculationContainer.classList.add('hidden');
+
+            formulaContainer.classList.remove('hidden');
+            setCustomTimeout(() => {
+                formulaContainer.innerHTML = `<div style="display: flex; align-items: center; margin-top: 20px;">
+            <span style="margin-right: 10px;">Mean Formula: </span>
+            <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                <span class="numerator">ΣX = Sum of all numbers</span>
+                <hr style="width: 100%;">
+                <span class="denominator">N = Count of numbers</span><br/><br/>
+            </div>
+        </div>`;
+                numberRange.classList.add('hidden');
+            }, 20000);
+
+            numberRange.innerHTML = '';
+            formulaContainer.innerHTML = '';
+            animationContainer.innerHTML = '';
+            calculationContainer.innerHTML = '';
+            calculationContainer.classList.add('hidden');
+
+            setCustomTimeout(() => {
+                displayNumbersSequentially(dataSet, animationContainer, () => { });
+                formulaContainer.classList.add('hidden');
+            }, 30000);
+        }
+
+        function displayNumbersSequentially(dataSet, container, callback) {
+            let sum = 0;
+            let lastHighlighted = null;
+
+            dataSet.forEach((number, index) => {
+                setCustomTimeout(() => {
+                    sum += number;
+                    const itemContainer = document.createElement('div');
+                    itemContainer.classList.add('item-container');
+
+                    const newSpan = document.createElement('span');
+                    newSpan.innerHTML = `${index > 0 ? ' + ' : ''}<span class="highlight">${number}</span>`;
+
+                    const img = document.createElement('img');
+                    img.src = `image_women_${number}.png`;
+                    img.alt = `Image for ${number}`;
+                    img.style.width = '50px';
+                    img.style.height = 'auto';
+
+                    itemContainer.appendChild(img);
+                    itemContainer.appendChild(newSpan);
+                    container.appendChild(itemContainer);
+
+                    if (lastHighlighted) {
+                        lastHighlighted.classList.remove('highlight');
+                    }
+
+                    lastHighlighted = newSpan.querySelector('.highlight');
+
+                    if (index === dataSet.length - 1) {
+                        container.innerHTML += ` = ${sum}`;
+                        setTimeout(callback, 2000);
+                    }
+                }, 2000 * index);
+            });
+            showCalculationDetails(dataSet, container);
+        }
+
+        function showCalculationDetails(dataSet, container) {
+            const sum = dataSet.reduce((acc, val) => acc + val, 0);
+            const count = dataSet.length;
+            const mean = sum / count;
+            container.classList.remove('hidden');
+            numberRange.innerHTML = '';
+            formulaContainer.innerHTML = '';
+            animationContainer.innerHTML = '';
+            calculationContainer.innerHTML = '';
+            calculationContainer.classList.add('hidden');
+            setCustomTimeout(() => {
+                container.classList.remove('hidden');
+                container.innerHTML = `Sum = ${sum}<br/><br/>Count = ${count}`;
+            }, 20000);
+            setTimeout(() => {
+                container.classList.remove('hidden');
+                container.innerHTML += `
+                            <div style="display: flex; align-items: center; margin-top: 20px;">
+                                <span style="margin-right: 10px;">Mean = </span>
+                                <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                                    <span class="numerator">Sum</span>
+                                    <hr style="width: 100%;">
+                                    <span class="denominator">Count</span>
+                                </div>
+                            </div>`;
+            }, 25000);
+            setTimeout(() => {
+                container.classList.remove('hidden');
+                //container.innerHTML += `<br/><br/>Mean = <div class="fraction"><span class="numerator">${sum}</span><hr><span class="denominator">${count}</span></div>`;
+                container.innerHTML += `
+                            <div style="display: flex; align-items: center; margin-top: 20px;">
+                                <span style="margin-right: 10px;">Mean = </span>
+                                <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                                    <span class="numerator">${sum}</span>
+                                    <hr style="width: 100%;">
+                                    <span class="denominator">${count}</span>
+                                </div>
+                            </div>`;
+            }, 35000);
+            setTimeout(() => {
+                container.classList.remove('hidden');
+                container.innerHTML += `<div><br/><br/>Mean Value = ${mean.toFixed(2)}<br/><br/></div>`;
+
+                // Now that all calculations and displays for the first dataset are done,
+                // reveal the 'Continue with New Dataset' button.
+
+            }, 40000); // This timeout duration should match the last step of your animation.
+
+
+        }
+
+        document.getElementById('pauseImage').addEventListener('click', pauseMedia);
+        document.getElementById('resumeButton').addEventListener('click', resumeMedia);
+    </script>
+</body>
+
+</html>
