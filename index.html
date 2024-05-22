@@ -16,7 +16,7 @@
             flex-direction: column;
             min-height: 100vh;
             text-align: center;
-            background-color: blanchedalmond;
+            background-color: #FFF1D7;
         }
 
         .highlight,
@@ -91,7 +91,8 @@
         }
 
         #meanVideo,
-        #meanVideo2 {
+        #meanVideo2a,
+        #meanVideo2b {
             position: absolute;
             left: -50px;
             top: 60%;
@@ -114,11 +115,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #DBA979;
+            background-color: white;
             padding: 20px;
             border: 2px solid black;
             border-radius: 10px;
             z-index: 1000;
+        }
+
+        #didAgent {
+            position: absolute;
+            left: -50px;
+            top: 60%;
+            width: 400px;
+            height: auto;
+            display: none;
         }
     </style>
 </head>
@@ -152,7 +162,9 @@
     <div id="animationContainer"></div>
     <div id="calculationContainer" class="hidden"></div>
     <video id="meanVideo" src="Mean_Video1.mp4"></video>
-    <video id="meanVideo2" src="Mean_Video2.mp4" hidden></video>
+    <video id="meanVideo2a" src="Mean_Video2a.mp4" hidden></video>
+    <video id="meanVideo2b" src="Mean_Video2b.mp4" hidden></video>
+    <div id="didAgent"></div>
     <button id="startButton">Start Mean Animation</button>
     <button id="continueButton" class="hidden">Continue with New Dataset</button>
     <div id="linksContainer" class="hidden">
@@ -168,7 +180,9 @@
 
     <script>
         const video = document.getElementById('meanVideo');
-        const video2 = document.getElementById('meanVideo2');
+        const video2a = document.getElementById('meanVideo2a');
+        const video2b = document.getElementById('meanVideo2b');
+        const didAgent = document.getElementById('didAgent');
         const pauseImage = document.getElementById('pauseImage');
         const pauseMessage = document.getElementById('pauseMessage');
         const resumeButton = document.getElementById('resumeButton');
@@ -181,7 +195,9 @@
 
         function pauseMedia() {
             video.pause();
-            video2.pause();
+            video2a.pause();
+            video2b.pause();
+            didAgent.style.display = 'block';
             timers.forEach((timer, index) => {
                 clearTimeout(timer.id);
                 pausedTimers.push(timer);
@@ -192,8 +208,11 @@
         }
 
         function resumeMedia() {
-            if (video2.style.display === 'block') {
-                video2.play();
+            didAgent.style.display = 'none';
+            if (video2a.style.display === 'block') {
+                video2a.play();
+            } else if (video2b.style.display === 'block') {
+                video2b.play();
             } else {
                 video.play();
             }
@@ -224,7 +243,8 @@
             startButton.classList.add('hidden');
             const dataSet = [2, 5, 13, 22, 47, 79];
             video.style.display = 'block';
-            video2.style.display = 'none';
+            video2a.style.display = 'none';
+            video2b.style.display = 'none';
             video.currentTime = 0;
             video.play();
             initializeTimers();
@@ -237,10 +257,16 @@
             const newDataSet = [2.5, 5.5, 14.2, 24.3, 45, 80.4];
             numberRange.classList.remove('hidden');
             animateMeanCalculation(newDataSet);
-            video2.currentTime = 0;
+            video2a.currentTime = 0;
+            video2b.currentTime = 0;
             video.style.display = 'none';
-            video2.style.display = 'block';
-            video2.play();
+            video2a.style.display = 'block';
+            video2a.play();
+            video2a.onended = () => {
+                video2a.style.display = 'none';
+                video2b.style.display = 'block';
+                video2b.play();
+            };
             initializeTimers();
         });
 
@@ -253,11 +279,6 @@
             const centerX = (window.innerWidth - numberRange.offsetWidth) / 2;
             const centerY = (window.innerHeight - numberRange.offsetHeight) / 2;
 
-            numberRange.innerHTML = '';
-            formulaContainer.innerHTML = '';
-            animationContainer.innerHTML = '';
-            calculationContainer.innerHTML = '';
-            calculationContainer.classList.add('hidden');
 
             setCustomTimeout(() => {
                 numberRange.textContent = 'Dataset: ' + dataSet.join(', ');
@@ -269,37 +290,29 @@
                     fill: 'forwards',
                     easing: 'ease-out'
                 });
-            }, 10000);
-
-            numberRange.innerHTML = '';
-            formulaContainer.innerHTML = '';
-            animationContainer.innerHTML = '';
-            calculationContainer.innerHTML = '';
-            calculationContainer.classList.add('hidden');
+            }, 5000);
 
             formulaContainer.classList.remove('hidden');
             setCustomTimeout(() => {
-                formulaContainer.innerHTML = `<div style="display: flex; align-items: center; margin-top: 20px;">
-            <span style="margin-right: 10px;">Mean Formula: </span>
-            <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
-                <span class="numerator">ΣX = Sum of all numbers</span>
-                <hr style="width: 100%;">
-                <span class="denominator">N = Count of numbers</span><br/><br/>
-            </div>
-        </div>`;
+                formulaContainer.innerHTML = `<div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
+                    <div>Mean Formula:</div>
+                    <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                        <span class="numerator">ΣX = Sum of all numbers</span>
+                        <hr style="width: 100%;">
+                        <span class="denominator">N = Count of numbers</span><br/><br/>
+                    </div>
+                </div>`;
                 numberRange.classList.add('hidden');
-            }, 20000);
-
+            }, 15000);
             numberRange.innerHTML = '';
             formulaContainer.innerHTML = '';
             animationContainer.innerHTML = '';
             calculationContainer.innerHTML = '';
             calculationContainer.classList.add('hidden');
-
             setCustomTimeout(() => {
                 displayNumbersSequentially(dataSet, animationContainer, () => { });
                 formulaContainer.classList.add('hidden');
-            }, 30000);
+            }, 20000);
         }
 
         function displayNumbersSequentially(dataSet, container, callback) {
@@ -345,55 +358,53 @@
             const count = dataSet.length;
             const mean = sum / count;
             container.classList.remove('hidden');
-            numberRange.innerHTML = '';
-            formulaContainer.innerHTML = '';
-            animationContainer.innerHTML = '';
-            calculationContainer.innerHTML = '';
-            calculationContainer.classList.add('hidden');
             setCustomTimeout(() => {
                 container.classList.remove('hidden');
-                container.innerHTML = `Sum = ${sum}<br/><br/>Count = ${count}`;
+                container.innerHTML = `Sum = ${sum}<br/><br/>Count = ${count}<br/><br/>`;
             }, 20000);
-            setTimeout(() => {
+            setCustomTimeout(() => {
                 container.classList.remove('hidden');
                 container.innerHTML += `
-                            <div style="display: flex; align-items: center; margin-top: 20px;">
-                                <span style="margin-right: 10px;">Mean = </span>
-                                <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
-                                    <span class="numerator">Sum</span>
-                                    <hr style="width: 100%;">
-                                    <span class="denominator">Count</span>
-                                </div>
-                            </div>`;
+                    <div style="display: flex; align-items: center; margin-top: 20px;">
+                        <span style="margin-right: 10px;">Mean = </span>
+                        <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                            <span class="numerator">Sum</span>
+                            <hr style="width: 100%;">
+                            <span class="denominator">Count</span><br/><br/>
+                        </div>
+                    </div>`;
             }, 25000);
-            setTimeout(() => {
+            setCustomTimeout(() => {
                 container.classList.remove('hidden');
-                //container.innerHTML += `<br/><br/>Mean = <div class="fraction"><span class="numerator">${sum}</span><hr><span class="denominator">${count}</span></div>`;
                 container.innerHTML += `
-                            <div style="display: flex; align-items: center; margin-top: 20px;">
-                                <span style="margin-right: 10px;">Mean = </span>
-                                <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
-                                    <span class="numerator">${sum}</span>
-                                    <hr style="width: 100%;">
-                                    <span class="denominator">${count}</span>
-                                </div>
-                            </div>`;
-            }, 35000);
-            setTimeout(() => {
+                    <div style="display: flex; align-items: center; margin-top: 20px;">
+                        <span style="margin-right: 10px;">Mean = </span>
+                        <div class="fraction" style="display: flex; flex-direction: column; align-items: center;">
+                            <span class="numerator">${sum}</span>
+                            <hr style="width: 100%;">
+                            <span class="denominator">${count}</span><br/><br/>
+                        </div>
+                    </div>`;
+            }, 30000);
+
+            setCustomTimeout(() => {
                 container.classList.remove('hidden');
                 container.innerHTML += `<div><br/><br/>Mean Value = ${mean.toFixed(2)}<br/><br/></div>`;
 
                 // Now that all calculations and displays for the first dataset are done,
                 // reveal the 'Continue with New Dataset' button.
 
-            }, 40000); // This timeout duration should match the last step of your animation.
-
-
+            }, 35000); // This timeout duration should match the last step of your animation.
         }
 
         document.getElementById('pauseImage').addEventListener('click', pauseMedia);
         document.getElementById('resumeButton').addEventListener('click', resumeMedia);
     </script>
+
+    <script type="module" src="https://agent.d-id.com/v1/index.js" data-name="did-agent" data-mode="fabio"
+        data-client-key="Z29vZ2xlLW9hdXRoMnwxMDEyNTM3MTA4MTkyOTU5NDEyNjA6WGdmNkdPZUJYalo0dlU4Yko0UFU0"
+        data-agent-id="agt_mSHLSjhZ">
+        </script>
 </body>
 
 </html>
